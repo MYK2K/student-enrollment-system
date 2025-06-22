@@ -3,15 +3,15 @@
  * Central location for all constant values used throughout the application
  */
 
+// Re-export the Prisma Enum as the single source of truth for roles.
+// The rest of the app will import USER_ROLES from this file.
+import { UserRole } from '@prisma/client';
+export { UserRole as USER_ROLES };
+
+
 // API Configuration
 export const API_PREFIX = process.env.API_PREFIX || '/api';
 export const API_VERSION = process.env.API_VERSION || 'v1';
-
-// User Roles
-export const USER_ROLES = {
-  STUDENT: 'student',
-  COLLEGE_ADMIN: 'college_admin'
-};
 
 // Validation Constants
 export const VALIDATION = {

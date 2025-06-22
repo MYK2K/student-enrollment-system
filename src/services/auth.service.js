@@ -4,7 +4,6 @@
  */
 
 import { prisma } from '../models/index.js';
-import { UserRole } from '@prisma/client';
 import { hashPassword, comparePassword } from '../utils/bcrypt.utils.js';
 import { generateTokens } from '../utils/jwt.utils.js';
 import { logger } from '../utils/logger.js';
@@ -39,12 +38,12 @@ export const register = async (userData) => {
       data: {
         email,
         password: hashedPassword,
-        role: role === USER_ROLES.STUDENT ? UserRole.STUDENT : UserRole.COLLEGE_ADMIN
+        role: role.toUpperCase(),
       }
     });
 
     // Create role-specific profile
-    if (role === USER_ROLES.STUDENT) {
+    if (role === USER_ROLES.STUDENT.toLowerCase()) {
       await tx.student.create({
         data: {
           userId: user.id,
@@ -53,7 +52,7 @@ export const register = async (userData) => {
           studentNumber
         }
       });
-    } else if (role === USER_ROLES.COLLEGE_ADMIN) {
+    } else if (role === USER_ROLES.COLLEGE_ADMIN.toLowerCase()) {
       await tx.collegeAdmin.create({
         data: {
           userId: user.id,

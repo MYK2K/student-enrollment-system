@@ -24,6 +24,9 @@ const passwordValidationChain = (fieldName = 'password') =>
     .matches(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/)
     .withMessage('Password must contain at least one special character');
 
+// Dynamically create a list of allowed lowercase roles from the enum
+const allowedRoles = Object.values(USER_ROLES).map(role => role.toLowerCase());
+
 /**
  * Register validation rules
  */
@@ -48,18 +51,18 @@ export const registerValidation = [
 
   // Role validation
   body('role')
+    .trim()
+    .toLowerCase() // Sanitize to lowercase before validation
     .notEmpty().withMessage('Role is required')
-    .isIn(Object.values(USER_ROLES))
-    .withMessage(`Role must be one of: ${Object.values(USER_ROLES).join(', ')}`),
+    .isIn(allowedRoles) // Validate against the dynamic list of lowercase roles
+    .withMessage(`Role must be one of: ${allowedRoles.join(', ')}`),
 
   // Name validation
   body('name')
     .trim()
     .notEmpty().withMessage('Name is required')
-    .isLength({ min: VALIDATION.NAME_MIN_LENGTH })
-    .withMessage(`Name must be at least ${VALIDATION.NAME_MIN_LENGTH} characters`)
-    .isLength({ max: VALIDATION.NAME_MAX_LENGTH })
-    .withMessage(`Name must not exceed ${VALIDATION.NAME_MAX_LENGTH} characters`)
+    .isLength({ min: VALIDATION.NAME_MIN_LENGTH, max: VALIDATION.NAME_MAX_LENGTH })
+    .withMessage(`Name must be between ${VALIDATION.NAME_MIN_LENGTH} and ${VALIDATION.NAME_MAX_LENGTH} characters`)
     .matches(/^[a-zA-Z\s'-]+$/)
     .withMessage('Name can only contain letters, spaces, hyphens, and apostrophes'),
 
@@ -71,7 +74,8 @@ export const registerValidation = [
 
   // Student number validation (only for students)
   body('studentNumber')
-    .if(body('role').equals(USER_ROLES.STUDENT))
+    // This now dynamically checks against the lowercase version of the enum value
+    .if(body('role').trim().toLowerCase().equals(USER_ROLES.STUDENT.toLowerCase()))
     .trim()
     .notEmpty().withMessage('Student number is required for students')
     .isLength({ max: VALIDATION.STUDENT_NUMBER_MAX_LENGTH })

@@ -4,7 +4,7 @@
  */
 
 import { body, param, query } from 'express-validator';
-import { VALIDATION, REGEX_PATTERNS } from '../config/constants.js';
+import { VALIDATION } from '../config/constants.js';
 
 /**
  * Get student validation
