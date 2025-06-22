@@ -14,7 +14,7 @@ import { ERROR_MESSAGES } from '../config/constants.js';
  * @param {Array} newCourses - Courses to check with timetables
  * @returns {Array} Conflicts
  */
-function checkTimetableConflictsHelper(existingCourses, newCourses) {
+const checkTimetableConflictsHelper = (existingCourses, newCourses) => {
   const conflicts = [];
 
   for (const newCourse of newCourses) {
@@ -154,87 +154,6 @@ export const enrollInCourses = async (userId, courseIds) => {
       message: `${c.newCourseCode} conflicts with ${c.existingCourseCode} on ${c.day}.`
     }))
   };
-};
-
-/**
- * Get student enrollments
- * @param {number} userId - User ID
- * @returns {Promise<Array>} Student enrollments
- */
-export const getStudentEnrollments = async (userId) => {
-  const student = await prisma.student.findUnique({
-    where: { userId }
-  });
-
-  if (!student) {
-    throw new Error(ERROR_MESSAGES.STUDENT_NOT_FOUND);
-  }
-
-  const enrollments = await prisma.enrollment.findMany({
-    where: { studentId: student.id },
-    include: {
-      course: {
-        include: {
-          timetables: {
-            orderBy: [
-              { dayOfWeek: 'asc' },
-              { startTime: 'asc' }
-            ]
-          }
-        }
-      }
-    },
-    orderBy: { createdAt: 'desc' }
-  });
-
-  return enrollments.map(enrollment => ({
-    ...enrollment,
-    course: {
-      ...enrollment.course,
-      timetables: enrollment.course.timetables.map(t => ({
-        ...t,
-        startTime: DateTime.fromJSDate(t.startTime).toFormat('HH:mm'),
-        endTime: DateTime.fromJSDate(t.endTime).toFormat('HH:mm')
-      }))
-    }
-  }));
-};
-
-/**
- * Drop enrollment
- * @param {number} userId - User ID
- * @param {number} enrollmentId - Enrollment ID
- * @returns {Promise<void>}
- */
-export const dropEnrollment = async (userId, enrollmentId) => {
-  const student = await prisma.student.findUnique({
-    where: { userId }
-  });
-
-  if (!student) {
-    throw new Error(ERROR_MESSAGES.STUDENT_NOT_FOUND);
-  }
-
-  const enrollment = await prisma.enrollment.findUnique({
-    where: { id: enrollmentId },
-    include: {
-      course: true
-    }
-  });
-
-  if (!enrollment) {
-    throw new Error(ERROR_MESSAGES.ENROLLMENT_NOT_FOUND);
-  }
-
-  if (enrollment.studentId !== student.id) {
-    throw new Error(ERROR_MESSAGES.ENROLLMENT_UNAUTHORIZED);
-  }
-
-  await prisma.enrollment.delete({
-    where: { id: enrollmentId }
-  });
-
-  logger.info(`Student ${student.id} dropped enrollment ${enrollmentId} for course ${enrollment.course.code}`);
 };
 
 /**

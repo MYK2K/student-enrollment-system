@@ -8,7 +8,7 @@ import { authenticate } from '../middlewares/auth.middleware.js';
 import { isStudent } from '../middlewares/role.middleware.js';
 import { validate, validateArray } from '../middlewares/validation.middleware.js';
 import { asyncHandler } from '../middlewares/error.middleware.js';
-import { enrollCoursesValidation, dropEnrollmentValidation } from '../validators/enrollment.validator.js';
+import { enrollCoursesValidation } from '../validators/enrollment.validator.js';
 import * as enrollmentController from '../controllers/enrollment.controller.js';
 
 const router = Router();
@@ -27,27 +27,6 @@ router.post(
   validateArray('courseIds', { minLength: 1, unique: true }),
   validate(enrollCoursesValidation),
   asyncHandler(enrollmentController.enrollCourses)
-);
-
-/**
- * @route   GET /api/enrollments
- * @desc    Get current student's enrollments
- * @access  Private (Student only)
- */
-router.get(
-  '/',
-  asyncHandler(enrollmentController.getMyEnrollments)
-);
-
-/**
- * @route   DELETE /api/enrollments/:enrollmentId
- * @desc    Drop a course enrollment
- * @access  Private (Student only)
- */
-router.delete(
-  '/:enrollmentId',
-  validate(dropEnrollmentValidation),
-  asyncHandler(enrollmentController.dropEnrollment)
 );
 
 /**

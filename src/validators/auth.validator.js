@@ -114,29 +114,3 @@ export const changePasswordValidation = [
     .custom((value, { req }) => value === req.body.newPassword)
     .withMessage(ERROR_MESSAGES.PASSWORDS_NOT_MATCH),
 ];
-
-/**
- * Forgot password validation rules
- */
-export const forgotPasswordValidation = [
-  body('email')
-    .trim()
-    .notEmpty().withMessage(ERROR_MESSAGES.EMAIL_REQUIRED)
-    .isEmail().withMessage(ERROR_MESSAGES.INVALID_EMAIL)
-    .normalizeEmail(),
-];
-
-/**
- * Reset password validation rules
- */
-export const resetPasswordValidation = [
-  body('token')
-    .notEmpty().withMessage(ERROR_MESSAGES.TOKEN_REQUIRED),
-
-  passwordValidationChain('newPassword'),
-
-  body('confirmPassword')
-    .notEmpty().withMessage(ERROR_MESSAGES.PASSWORD_CONFIRMATION_REQUIRED)
-    .custom((value, { req }) => value === req.body.newPassword)
-    .withMessage(ERROR_MESSAGES.PASSWORDS_NOT_MATCH),
-];

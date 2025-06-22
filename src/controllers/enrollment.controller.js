@@ -9,7 +9,6 @@ import {
   sendCreated,
   sendBadRequest,
   sendConflict,
-  sendNotFound,
   sendServerError 
 } from '../utils/response.utils.js';
 import { logger } from '../utils/logger.js';
@@ -44,51 +43,6 @@ export const enrollCourses = async (req, res) => {
     
     if (error.message.includes('college')) {
       return sendBadRequest(res, ERROR_MESSAGES.COLLEGE_MISMATCH);
-    }
-    
-    sendServerError(res, error.message);
-  }
-};
-
-/**
- * Get student's enrollments
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- */
-export const getMyEnrollments = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const enrollments = await enrollmentService.getStudentEnrollments(userId);
-    
-    sendResponse(res, 200, SUCCESS_MESSAGES.FETCH_SUCCESS, enrollments);
-  } catch (error) {
-    logger.error('Get enrollments error:', error);
-    sendServerError(res, error.message);
-  }
-};
-
-/**
- * Drop enrollment
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- */
-export const dropEnrollment = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const { enrollmentId } = req.params;
-    
-    await enrollmentService.dropEnrollment(userId, parseInt(enrollmentId));
-    
-    sendResponse(res, 200, SUCCESS_MESSAGES.DELETE_SUCCESS);
-  } catch (error) {
-    logger.error('Drop enrollment error:', error);
-    
-    if (error.message.includes('not found')) {
-      return sendNotFound(res, 'Enrollment not found');
-    }
-    
-    if (error.message.includes('unauthorized')) {
-      return sendBadRequest(res, 'You can only drop your own enrollments');
     }
     
     sendServerError(res, error.message);
