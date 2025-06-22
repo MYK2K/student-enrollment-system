@@ -1,0 +1,148 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// User model for authentication
+model User {
+  id           Int            @id @default(autoincrement())
+  email        String         @unique @db.VarChar(255)
+  password     String         @db.VarChar(255)
+  role         UserRole
+  isActive     Boolean        @default(true) @map("is_active")
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+  
+  // Relations
+  student      Student?
+  collegeAdmin CollegeAdmin?
+  
+  @@map("users")
+  @@index([email])
+  @@index([role])
+}
+
+// Student model
+model Student {
+  id            Int          @id @default(autoincrement())
+  userId        Int          @unique @map("user_id")
+  collegeId     Int          @map("college_id")
+  name          String       @db.VarChar(255)
+  studentNumber String       @db.VarChar(50) @map("student_number")
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+  
+  // Relations
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  college       College      @relation(fields: [collegeId], references: [id])
+  enrollments   Enrollment[]
+  
+  @@map("students")
+  @@index([collegeId])
+  @@index([studentNumber])
+}
+
+// College Admin model
+model CollegeAdmin {
+  id         Int      @id @default(autoincrement())
+  userId     Int      @unique @map("user_id")
+  collegeId  Int      @map("college_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  college    College  @relation(fields: [collegeId], references: [id])
+  
+  @@map("college_admins")
+  @@index([collegeId])
+}
+
+// College model
+model College {
+  id           Int            @id @default(autoincrement())
+  name         String         @db.VarChar(255)
+  code         String         @unique @db.VarChar(50)
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+  
+  // Relations
+  students     Student[]
+  courses      Course[]
+  collegeAdmins CollegeAdmin[]
+  
+  @@map("colleges")
+  @@index([code])
+}
+
+// Course model
+model Course {
+  id          Int          @id @default(autoincrement())
+  collegeId   Int          @map("college_id")
+  code        String       @db.VarChar(50)
+  name        String       @db.VarChar(255)
+  description String?      @db.Text
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+  
+  // Relations
+  college     College      @relation(fields: [collegeId], references: [id])
+  timetables  Timetable[]
+  enrollments Enrollment[]
+  
+  @@map("courses")
+  @@unique([collegeId, code])
+  @@index([collegeId])
+  @@index([code])
+}
+
+// Timetable model
+model Timetable {
+  id         Int      @id @default(autoincrement())
+  courseId   Int      @map("course_id")
+  dayOfWeek  Int      @map("day_of_week") @db.TinyInt
+  startTime  DateTime @map("start_time") @db.Time()
+  endTime    DateTime @map("end_time") @db.Time()
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  @@map("timetables")
+  @@index([courseId])
+  @@index([dayOfWeek])
+}
+
+// Enrollment model (junction table)
+model Enrollment {
+  id         Int      @id @default(autoincrement())
+  studentId  Int      @map("student_id")
+  courseId   Int      @map("course_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  @@map("enrollments")
+  @@unique([studentId, courseId])
+  @@index([studentId])
+  @@index([courseId])
+}
+
+// Enum for user roles
+enum UserRole {
+  STUDENT @map("student")
+  COLLEGE_ADMIN @map("college_admin")
+  
+  @@map("user_role")
+}
