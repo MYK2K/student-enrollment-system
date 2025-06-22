@@ -57,6 +57,7 @@ export const ERROR_MESSAGES = {
   TOKEN_EXPIRED: 'Token has expired',
   TOKEN_INVALID: 'Invalid token',
   TOKEN_NOT_PROVIDED: 'No token provided',
+  TOKEN_REQUIRED: 'Reset token is required',
   INACTIVE_USER: 'User account is inactive',
   
   // Validation
@@ -64,8 +65,27 @@ export const ERROR_MESSAGES = {
   INVALID_EMAIL: 'Invalid email format',
   INVALID_PASSWORD: 'Password must be at least 8 characters long',
   PASSWORDS_NOT_MATCH: 'Passwords do not match',
+  PASSWORD_CONFIRMATION_REQUIRED: 'Password confirmation is required',
+  PASSWORD_SAME_AS_OLD: 'New password must be different from the current one',
   INVALID_DATA: 'Invalid data provided',
   INVALID_JSON: 'Invalid JSON payload',
+  INVALID_DATE_FORMAT: 'Invalid date format, must be ISO8601',
+  INVALID_COURSE_CODE_FORMAT: 'Course code must be in format: 2-4 uppercase letters followed by 3-4 digits (e.g., CS101)',
+  INVALID_NAME_FORMAT: 'Name can only contain letters, spaces, hyphens, and apostrophes',
+  INVALID_STUDENT_NUMBER_FORMAT: 'Student number can only contain uppercase letters, numbers, and hyphens',
+
+  // Required Fields
+  EMAIL_REQUIRED: 'Email is required',
+  PASSWORD_REQUIRED: 'Password is required',
+  ROLE_REQUIRED: 'Role is required',
+  NAME_REQUIRED: 'Name is required',
+  COLLEGE_ID_REQUIRED: 'College ID is required',
+  COURSE_CODE_REQUIRED: 'Course code is required',
+  COURSE_NAME_REQUIRED: 'Course name is required',
+  STUDENT_NUMBER_REQUIRED: 'Student number is required for students',
+  CURRENT_PASSWORD_REQUIRED: 'Current password is required',
+  START_TIME_REQUIRED: 'Start time is required',
+  END_TIME_REQUIRED: 'End time is required',
   
   // User
   USER_NOT_FOUND: 'User not found',
@@ -91,13 +111,17 @@ export const ERROR_MESSAGES = {
   COURSE_CODE_EXISTS: 'Course with this code already exists in the college',
   COURSE_DELETE_HAS_ENROLLMENTS: 'Cannot delete course with enrolled students',
   
-  // Enrollment
+  // Enrollment & Arrays
   ALREADY_ENROLLED: 'Student is already enrolled in this course',
   TIMETABLE_CLASH: 'Cannot enroll: timetable clash detected',
   NO_COURSES_PROVIDED: 'No courses provided for enrollment',
   ENROLLMENT_NOT_FOUND: 'Enrollment not found',
   ENROLLMENT_UNAUTHORIZED: 'You can only drop your own enrollments',
-  
+  COURSE_ID_ARRAY_EMPTY: 'Course IDs must be a non-empty array',
+  TIMETABLE_ARRAY_EMPTY: 'Timetable must be a non-empty array',
+  INVALID_ID_IN_ARRAY: 'Each ID in the array must be a positive integer',
+  BULK_STUDENTS_ARRAY_LIMIT: 'Students array must contain between 1 and 100 entries',
+
   // Timetable
   INVALID_DAY_OF_WEEK: 'Day of week must be between 1 and 7',
   INVALID_TIME_RANGE: 'End time must be after start time',

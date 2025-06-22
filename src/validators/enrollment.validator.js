@@ -4,6 +4,7 @@
  */
 
 import { body, param } from 'express-validator';
+import { ERROR_MESSAGES } from '../config/constants.js';
 
 /**
  * Enroll courses validation rules
@@ -11,11 +12,11 @@ import { body, param } from 'express-validator';
 export const enrollCoursesValidation = [
   body('courseIds')
     .isArray({ min: 1 })
-    .withMessage('Course IDs must be a non-empty array'),
+    .withMessage(ERROR_MESSAGES.COURSE_ID_ARRAY_EMPTY),
     
   body('courseIds.*')
     .isInt({ min: 1 })
-    .withMessage('Each course ID must be a positive integer')
+    .withMessage(ERROR_MESSAGES.INVALID_ID_IN_ARRAY)
     .toInt(),
 ];
 
@@ -25,6 +26,6 @@ export const enrollCoursesValidation = [
 export const dropEnrollmentValidation = [
   param('enrollmentId')
     .isInt({ min: 1 })
-    .withMessage('Invalid enrollment ID')
+    .withMessage(ERROR_MESSAGES.INVALID_DATA)
     .toInt(),
 ];

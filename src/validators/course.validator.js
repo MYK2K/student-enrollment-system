@@ -13,7 +13,7 @@ import { VALIDATION, ERROR_MESSAGES } from '../config/constants.js';
 export const getCourseValidation = [
   param('courseId')
     .isInt({ min: 1 })
-    .withMessage('Invalid course ID')
+    .withMessage(ERROR_MESSAGES.INVALID_DATA)
     .toInt(),
 ];
 
@@ -30,7 +30,7 @@ export const searchCoursesValidation = [
   query('collegeId')
     .optional()
     .isInt({ min: 1 })
-    .withMessage('Invalid college ID')
+    .withMessage(ERROR_MESSAGES.INVALID_DATA)
     .toInt(),
 ];
 
@@ -40,15 +40,15 @@ export const searchCoursesValidation = [
 export const createCourseValidation = [
   body('code')
     .trim()
-    .notEmpty().withMessage('Course code is required')
+    .notEmpty().withMessage(ERROR_MESSAGES.COURSE_CODE_REQUIRED)
     .isLength({ max: VALIDATION.CODE_MAX_LENGTH })
     .withMessage(`Course code must not exceed ${VALIDATION.CODE_MAX_LENGTH} characters`)
     .matches(/^[A-Z]{2,4}[0-9]{3,4}$/)
-    .withMessage('Course code must be in format: 2-4 uppercase letters followed by 3-4 digits (e.g., CS101)'),
+    .withMessage(ERROR_MESSAGES.INVALID_COURSE_CODE_FORMAT),
 
   body('name')
     .trim()
-    .notEmpty().withMessage('Course name is required')
+    .notEmpty().withMessage(ERROR_MESSAGES.COURSE_NAME_REQUIRED)
     .isLength({ min: VALIDATION.NAME_MIN_LENGTH, max: VALIDATION.NAME_MAX_LENGTH })
     .withMessage(`Course name must be between ${VALIDATION.NAME_MIN_LENGTH} and ${VALIDATION.NAME_MAX_LENGTH} characters`),
 
@@ -65,7 +65,7 @@ export const createCourseValidation = [
 export const updateCourseValidation = [
   param('courseId')
     .isInt({ min: 1 })
-    .withMessage('Invalid course ID')
+    .withMessage(ERROR_MESSAGES.INVALID_DATA)
     .toInt(),
 
   body('code')
@@ -74,7 +74,7 @@ export const updateCourseValidation = [
     .isLength({ max: VALIDATION.CODE_MAX_LENGTH })
     .withMessage(`Course code must not exceed ${VALIDATION.CODE_MAX_LENGTH} characters`)
     .matches(/^[A-Z]{2,4}[0-9]{3,4}$/)
-    .withMessage('Course code must be in format: 2-4 uppercase letters followed by 3-4 digits'),
+    .withMessage(ERROR_MESSAGES.INVALID_COURSE_CODE_FORMAT),
 
   body('name')
     .optional()
@@ -95,12 +95,12 @@ export const updateCourseValidation = [
 export const timetableValidation = [
   body('courseId')
     .isInt({ min: 1 })
-    .withMessage('Invalid course ID')
+    .withMessage(ERROR_MESSAGES.INVALID_DATA)
     .toInt(),
 
   body('timetable')
     .isArray({ min: 1 })
-    .withMessage('Timetable must be a non-empty array'),
+    .withMessage(ERROR_MESSAGES.TIMETABLE_ARRAY_EMPTY),
 
   body('timetable.*.dayOfWeek')
     .isInt({ min: 1, max: 7 })
@@ -108,24 +108,21 @@ export const timetableValidation = [
     .toInt(),
 
   body('timetable.*.startTime')
-    .notEmpty().withMessage('Start time is required')
+    .notEmpty().withMessage(ERROR_MESSAGES.START_TIME_REQUIRED)
     .custom((time) => DateTime.fromFormat(time, 'HH:mm').isValid)
     .withMessage(ERROR_MESSAGES.INVALID_TIME_FORMAT),
 
   body('timetable.*.endTime')
-    .notEmpty().withMessage('End time is required')
+    .notEmpty().withMessage(ERROR_MESSAGES.END_TIME_REQUIRED)
     .custom((time) => DateTime.fromFormat(time, 'HH:mm').isValid)
     .withMessage(ERROR_MESSAGES.INVALID_TIME_FORMAT)
     .custom((endTime, { req, path }) => {
-      // Get the index of the current timetable slot from the path
       const index = path.match(/\[(\d+)\]/)[1];
       const startTime = req.body.timetable[index].startTime;
       
-      // Parse with Luxon for a reliable comparison
       const start = DateTime.fromFormat(startTime, 'HH:mm');
       const end = DateTime.fromFormat(endTime, 'HH:mm');
 
-      // Ensure both are valid before comparing
       if (start.isValid && end.isValid) {
         return end > start;
       }

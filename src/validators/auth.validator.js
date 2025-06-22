@@ -13,9 +13,9 @@ import { USER_ROLES, VALIDATION, ERROR_MESSAGES } from '../config/constants.js';
  */
 const passwordValidationChain = (fieldName = 'password') => 
   body(fieldName)
-    .notEmpty().withMessage('Password is required')
+    .notEmpty().withMessage(ERROR_MESSAGES.PASSWORD_REQUIRED)
     .isLength({ min: VALIDATION.PASSWORD_MIN_LENGTH })
-    .withMessage(`Password must be at least ${VALIDATION.PASSWORD_MIN_LENGTH} characters`)
+    .withMessage(ERROR_MESSAGES.INVALID_PASSWORD)
     .isLength({ max: VALIDATION.PASSWORD_MAX_LENGTH })
     .withMessage(`Password must not exceed ${VALIDATION.PASSWORD_MAX_LENGTH} characters`)
     .matches(/[A-Z]/).withMessage('Password must contain at least one uppercase letter')
@@ -24,64 +24,55 @@ const passwordValidationChain = (fieldName = 'password') =>
     .matches(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/)
     .withMessage('Password must contain at least one special character');
 
-// Dynamically create a list of allowed lowercase roles from the enum
 const allowedRoles = Object.values(USER_ROLES).map(role => role.toLowerCase());
 
 /**
  * Register validation rules
  */
 export const registerValidation = [
-  // Email validation
   body('email')
     .trim()
-    .notEmpty().withMessage('Email is required')
-    .isEmail().withMessage('Invalid email format')
+    .notEmpty().withMessage(ERROR_MESSAGES.EMAIL_REQUIRED)
+    .isEmail().withMessage(ERROR_MESSAGES.INVALID_EMAIL)
     .normalizeEmail()
     .isLength({ max: VALIDATION.EMAIL_MAX_LENGTH })
     .withMessage(`Email must not exceed ${VALIDATION.EMAIL_MAX_LENGTH} characters`),
 
-  // Password validation (using the reusable chain)
   passwordValidationChain('password'),
 
-  // Confirm password validation
   body('confirmPassword')
-    .notEmpty().withMessage('Password confirmation is required')
+    .notEmpty().withMessage(ERROR_MESSAGES.PASSWORD_CONFIRMATION_REQUIRED)
     .custom((value, { req }) => value === req.body.password)
-    .withMessage('Passwords do not match'),
+    .withMessage(ERROR_MESSAGES.PASSWORDS_NOT_MATCH),
 
-  // Role validation
   body('role')
     .trim()
-    .toLowerCase() // Sanitize to lowercase before validation
-    .notEmpty().withMessage('Role is required')
-    .isIn(allowedRoles) // Validate against the dynamic list of lowercase roles
+    .toLowerCase()
+    .notEmpty().withMessage(ERROR_MESSAGES.ROLE_REQUIRED)
+    .isIn(allowedRoles)
     .withMessage(`Role must be one of: ${allowedRoles.join(', ')}`),
 
-  // Name validation
   body('name')
     .trim()
-    .notEmpty().withMessage('Name is required')
+    .notEmpty().withMessage(ERROR_MESSAGES.NAME_REQUIRED)
     .isLength({ min: VALIDATION.NAME_MIN_LENGTH, max: VALIDATION.NAME_MAX_LENGTH })
     .withMessage(`Name must be between ${VALIDATION.NAME_MIN_LENGTH} and ${VALIDATION.NAME_MAX_LENGTH} characters`)
     .matches(/^[a-zA-Z\s'-]+$/)
-    .withMessage('Name can only contain letters, spaces, hyphens, and apostrophes'),
+    .withMessage(ERROR_MESSAGES.INVALID_NAME_FORMAT),
 
-  // College ID validation
   body('collegeId')
-    .notEmpty().withMessage('College ID is required')
-    .isInt({ min: 1 }).withMessage('Invalid college ID')
+    .notEmpty().withMessage(ERROR_MESSAGES.COLLEGE_ID_REQUIRED)
+    .isInt({ min: 1 }).withMessage(ERROR_MESSAGES.INVALID_DATA)
     .toInt(),
 
-  // Student number validation (only for students)
   body('studentNumber')
-    // This now dynamically checks against the lowercase version of the enum value
     .if(body('role').trim().toLowerCase().equals(USER_ROLES.STUDENT.toLowerCase()))
     .trim()
-    .notEmpty().withMessage('Student number is required for students')
+    .notEmpty().withMessage(ERROR_MESSAGES.STUDENT_NUMBER_REQUIRED)
     .isLength({ max: VALIDATION.STUDENT_NUMBER_MAX_LENGTH })
     .withMessage(`Student number must not exceed ${VALIDATION.STUDENT_NUMBER_MAX_LENGTH} characters`)
     .matches(/^[A-Z0-9-]+$/)
-    .withMessage('Student number can only contain uppercase letters, numbers, and hyphens'),
+    .withMessage(ERROR_MESSAGES.INVALID_STUDENT_NUMBER_FORMAT),
 ];
 
 /**
@@ -90,12 +81,12 @@ export const registerValidation = [
 export const loginValidation = [
   body('email')
     .trim()
-    .notEmpty().withMessage('Email is required')
-    .isEmail().withMessage('Invalid email format')
+    .notEmpty().withMessage(ERROR_MESSAGES.EMAIL_REQUIRED)
+    .isEmail().withMessage(ERROR_MESSAGES.INVALID_EMAIL)
     .normalizeEmail(),
 
   body('password')
-    .notEmpty().withMessage('Password is required'),
+    .notEmpty().withMessage(ERROR_MESSAGES.PASSWORD_REQUIRED),
 ];
 
 /**
@@ -103,8 +94,8 @@ export const loginValidation = [
  */
 export const refreshTokenValidation = [
   body('refreshToken')
-    .notEmpty().withMessage('Refresh token is required')
-    .isString().withMessage('Invalid refresh token format'),
+    .notEmpty().withMessage(ERROR_MESSAGES.TOKEN_REQUIRED)
+    .isString().withMessage(ERROR_MESSAGES.TOKEN_INVALID),
 ];
 
 /**
@@ -112,17 +103,16 @@ export const refreshTokenValidation = [
  */
 export const changePasswordValidation = [
   body('currentPassword')
-    .notEmpty().withMessage('Current password is required'),
+    .notEmpty().withMessage(ERROR_MESSAGES.CURRENT_PASSWORD_REQUIRED),
 
-  // New password validation (using reusable chain with a custom rule)
   passwordValidationChain('newPassword')
     .custom((value, { req }) => value !== req.body.currentPassword)
-    .withMessage('New password must be different from current password'),
+    .withMessage(ERROR_MESSAGES.PASSWORD_SAME_AS_OLD),
 
   body('confirmPassword')
-    .notEmpty().withMessage('Password confirmation is required')
+    .notEmpty().withMessage(ERROR_MESSAGES.PASSWORD_CONFIRMATION_REQUIRED)
     .custom((value, { req }) => value === req.body.newPassword)
-    .withMessage('Passwords do not match'),
+    .withMessage(ERROR_MESSAGES.PASSWORDS_NOT_MATCH),
 ];
 
 /**
@@ -131,8 +121,8 @@ export const changePasswordValidation = [
 export const forgotPasswordValidation = [
   body('email')
     .trim()
-    .notEmpty().withMessage('Email is required')
-    .isEmail().withMessage('Invalid email format')
+    .notEmpty().withMessage(ERROR_MESSAGES.EMAIL_REQUIRED)
+    .isEmail().withMessage(ERROR_MESSAGES.INVALID_EMAIL)
     .normalizeEmail(),
 ];
 
@@ -141,13 +131,12 @@ export const forgotPasswordValidation = [
  */
 export const resetPasswordValidation = [
   body('token')
-    .notEmpty().withMessage('Reset token is required'),
+    .notEmpty().withMessage(ERROR_MESSAGES.TOKEN_REQUIRED),
 
-  // New password validation (using the reusable chain)
   passwordValidationChain('newPassword'),
 
   body('confirmPassword')
-    .notEmpty().withMessage('Password confirmation is required')
+    .notEmpty().withMessage(ERROR_MESSAGES.PASSWORD_CONFIRMATION_REQUIRED)
     .custom((value, { req }) => value === req.body.newPassword)
-    .withMessage('Passwords do not match'),
+    .withMessage(ERROR_MESSAGES.PASSWORDS_NOT_MATCH),
 ];

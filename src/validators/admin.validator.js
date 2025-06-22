@@ -4,7 +4,7 @@
  */
 
 import { body, param, query } from 'express-validator';
-import { VALIDATION } from '../config/constants.js';
+import { VALIDATION, ERROR_MESSAGES } from '../config/constants.js';
 
 /**
  * Get student validation
@@ -12,7 +12,7 @@ import { VALIDATION } from '../config/constants.js';
 export const getStudentValidation = [
   param('studentId')
     .isInt({ min: 1 })
-    .withMessage('Invalid student ID')
+    .withMessage(ERROR_MESSAGES.INVALID_DATA)
     .toInt(),
 ];
 
@@ -22,31 +22,30 @@ export const getStudentValidation = [
 export const bulkImportStudentsValidation = [
   body('students')
     .isArray({ min: 1, max: 100 })
-    .withMessage('Students must be an array with 1-100 entries'),
+    .withMessage(ERROR_MESSAGES.BULK_STUDENTS_ARRAY_LIMIT),
 
   body('students.*.email')
     .trim()
-    .notEmpty().withMessage('Email is required')
-    .isEmail().withMessage('Invalid email format')
+    .notEmpty().withMessage(ERROR_MESSAGES.EMAIL_REQUIRED)
+    .isEmail().withMessage(ERROR_MESSAGES.INVALID_EMAIL)
     .normalizeEmail(),
 
   body('students.*.name')
     .trim()
-    .notEmpty().withMessage('Name is required')
+    .notEmpty().withMessage(ERROR_MESSAGES.NAME_REQUIRED)
     .isLength({ min: VALIDATION.NAME_MIN_LENGTH, max: VALIDATION.NAME_MAX_LENGTH })
     .withMessage(`Name must be between ${VALIDATION.NAME_MIN_LENGTH} and ${VALIDATION.NAME_MAX_LENGTH} characters`),
 
   body('students.*.studentNumber')
     .trim()
-    .notEmpty().withMessage('Student number is required')
+    .notEmpty().withMessage(ERROR_MESSAGES.STUDENT_NUMBER_REQUIRED)
     .isLength({ max: VALIDATION.STUDENT_NUMBER_MAX_LENGTH })
     .withMessage(`Student number must not exceed ${VALIDATION.STUDENT_NUMBER_MAX_LENGTH} characters`),
 
-  // Optional: Set a default password for all imported students
   body('defaultPassword')
     .optional()
     .isLength({ min: VALIDATION.PASSWORD_MIN_LENGTH })
-    .withMessage(`Default password must be at least ${VALIDATION.PASSWORD_MIN_LENGTH} characters`),
+    .withMessage(ERROR_MESSAGES.INVALID_PASSWORD),
 ];
 
 /**
@@ -62,13 +61,13 @@ export const adminSearchValidation = [
   query('startDate')
     .optional()
     .isISO8601()
-    .withMessage('Start date must be a valid date')
+    .withMessage(ERROR_MESSAGES.INVALID_DATE_FORMAT)
     .toDate(),
     
   query('endDate')
     .optional()
     .isISO8601()
-    .withMessage('End date must be a valid date')
+    .withMessage(ERROR_MESSAGES.INVALID_DATE_FORMAT)
     .toDate()
     .custom((endDate, { req }) => {
       if (req.query.startDate && endDate < req.query.startDate) {
@@ -76,7 +75,7 @@ export const adminSearchValidation = [
       }
       return true;
     })
-    .withMessage('End date must be after start date'),
+    .withMessage(ERROR_MESSAGES.INVALID_TIME_RANGE),
 ];
 
 /**
@@ -85,12 +84,12 @@ export const adminSearchValidation = [
 export const deleteEnrollmentValidation = [
   param('studentId')
     .isInt({ min: 1 })
-    .withMessage('Invalid student ID')
+    .withMessage(ERROR_MESSAGES.INVALID_DATA)
     .toInt(),
     
   param('enrollmentId')
     .isInt({ min: 1 })
-    .withMessage('Invalid enrollment ID')
+    .withMessage(ERROR_MESSAGES.INVALID_DATA)
     .toInt(),
 ];
 
@@ -100,6 +99,6 @@ export const deleteEnrollmentValidation = [
 export const deleteTimetableValidation = [
   param('timetableId')
     .isInt({ min: 1 })
-    .withMessage('Invalid timetable ID')
+    .withMessage(ERROR_MESSAGES.INVALID_DATA)
     .toInt(),
 ];

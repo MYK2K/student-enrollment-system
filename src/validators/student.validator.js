@@ -4,7 +4,7 @@
  */
 
 import { body, query } from 'express-validator';
-import { VALIDATION } from '../config/constants.js';
+import { VALIDATION, ERROR_MESSAGES } from '../config/constants.js';
 
 /**
  * Update profile validation rules
@@ -13,12 +13,10 @@ export const updateProfileValidation = [
   body('name')
     .optional()
     .trim()
-    .isLength({ min: VALIDATION.NAME_MIN_LENGTH })
-    .withMessage(`Name must be at least ${VALIDATION.NAME_MIN_LENGTH} characters`)
-    .isLength({ max: VALIDATION.NAME_MAX_LENGTH })
-    .withMessage(`Name must not exceed ${VALIDATION.NAME_MAX_LENGTH} characters`)
+    .isLength({ min: VALIDATION.NAME_MIN_LENGTH, max: VALIDATION.NAME_MAX_LENGTH })
+    .withMessage(`Name must be between ${VALIDATION.NAME_MIN_LENGTH} and ${VALIDATION.NAME_MAX_LENGTH} characters`)
     .matches(/^[a-zA-Z\s'-]+$/)
-    .withMessage('Name can only contain letters, spaces, hyphens, and apostrophes'),
+    .withMessage(ERROR_MESSAGES.INVALID_NAME_FORMAT),
 
   body('studentNumber')
     .optional()
@@ -26,7 +24,7 @@ export const updateProfileValidation = [
     .isLength({ max: VALIDATION.STUDENT_NUMBER_MAX_LENGTH })
     .withMessage(`Student number must not exceed ${VALIDATION.STUDENT_NUMBER_MAX_LENGTH} characters`)
     .matches(/^[A-Z0-9-]+$/)
-    .withMessage('Student number can only contain uppercase letters, numbers, and hyphens'),
+    .withMessage(ERROR_MESSAGES.INVALID_STUDENT_NUMBER_FORMAT),
 ];
 
 /**
@@ -42,12 +40,12 @@ export const searchCoursesValidation = [
   query('page')
     .optional()
     .isInt({ min: 1 })
-    .withMessage('Page must be a positive integer')
+    .withMessage(ERROR_MESSAGES.INVALID_DATA)
     .toInt(),
     
   query('limit')
     .optional()
     .isInt({ min: 1, max: 100 })
-    .withMessage('Limit must be between 1 and 100')
+    .withMessage(`Limit must be between 1 and 100`)
     .toInt(),
 ];
