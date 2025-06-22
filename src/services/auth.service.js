@@ -29,8 +29,6 @@ export const register = async (userData) => {
   // Hash password
   const hashedPassword = await hashPassword(password);
 
-  console.log({USER_ROLES, UserRole});
-
   // Start transaction
   const result = await prisma.$transaction(async (tx) => {
     // Create user

@@ -9,8 +9,7 @@ import { isCollegeAdmin, isSameCollege } from '../middlewares/role.middleware.js
 import { validate } from '../middlewares/validation.middleware.js';
 import { asyncHandler } from '../middlewares/error.middleware.js';
 import { prisma } from '../config/database.js';
-import { timetableValidation } from '../validators/enrollment.validator.js';
-import { deleteTimetableValidation } from '../validators/admin.validator.js';
+import { timetableValidation, deleteTimetableValidation } from '../validators/admin.validator.js';
 import * as adminController from '../controllers/admin.controller.js';
 
 const router = Router();

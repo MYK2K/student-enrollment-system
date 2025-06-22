@@ -7,7 +7,6 @@ import { Router } from 'express';
 import { authenticate } from '../middlewares/auth.middleware.js';
 import { isStudent } from '../middlewares/role.middleware.js';
 import { validate, validateArray } from '../middlewares/validation.middleware.js';
-import { asyncHandler } from '../middlewares/error.middleware.js';
 import { enrollCoursesValidation } from '../validators/enrollment.validator.js';
 import * as enrollmentController from '../controllers/enrollment.controller.js';
 
@@ -18,7 +17,8 @@ router.use(authenticate, isStudent);
 
 /**
  * @route   POST /api/enrollments
- * @desc    Enroll in multiple courses
+ * @desc    Enroll in multiple courses with conflict detection.
+ *          This is an all-or-nothing operation.
  * @access  Private (Student only)
  * @body    {courseIds: []}
  */
@@ -26,20 +26,8 @@ router.post(
   '/',
   validateArray('courseIds', { minLength: 1, unique: true }),
   validate(enrollCoursesValidation),
-  asyncHandler(enrollmentController.enrollCourses)
-);
-
-/**
- * @route   POST /api/enrollments/check-conflicts
- * @desc    Check for timetable conflicts before enrollment
- * @access  Private (Student only)
- * @body    {courseIds: []}
- */
-router.post(
-  '/check-conflicts',
-  validateArray('courseIds', { minLength: 1, unique: true }),
-  validate(enrollCoursesValidation),
-  asyncHandler(enrollmentController.checkConflicts)
+  // No need for asyncHandler here as the controller now uses next(error)
+  enrollmentController.enrollCourses
 );
 
 export default router;
