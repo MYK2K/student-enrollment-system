@@ -37,10 +37,7 @@ The system allows students to enroll in courses from their college and ensures t
     ```
 
 3.  **Set up environment variables:**
-    Copy `.env.example` to `.env` and fill in your database credentials and JWT secrets.
-    ```bash
-    cp .env .env
-    ```
+    Type in your local db (MySQL) credentials `.env` sample creds are already filled.
 
 4.  **Set up the database:**
     This command will create the database, apply migrations, and generate the Prisma client.
