@@ -1,12 +1,8 @@
 {
   "env": {
     "es2024": true,
-    "node": true,
-    "jest": true
+    "node": true
   },
-  "extends": [
-    "airbnb-base"
-  ],
   "parserOptions": {
     "ecmaVersion": 2024,
     "sourceType": "module"
@@ -16,41 +12,9 @@
     "quotes": ["error", "single"],
     "semi": ["error", "always"],
     "comma-dangle": ["error", "only-multiline"],
-    "no-console": "off",
-    "no-underscore-dangle": "off",
+    "no-unused-vars": ["warn", { "argsIgnorePattern": "^(next|req|res|_)$" }],
+    "no-console": "warn",
     "consistent-return": "off",
-    "func-names": "off",
-    "no-unused-vars": [
-      "error",
-      {
-        "argsIgnorePattern": "next|req|res"
-      }
-    ],
-    "import/extensions": [
-      "error",
-      "ignorePackages",
-      {
-        "js": "always"
-      }
-    ],
-    "import/no-unresolved": "off",
-    "import/prefer-default-export": "off",
-    "no-param-reassign": ["error", {
-      "props": false
-    }],
-    "max-len": ["error", {
-      "code": 120,
-      "ignoreComments": true,
-      "ignoreStrings": true,
-      "ignoreTemplateLiterals": true
-    }],
-    "arrow-body-style": "off",
-    "prefer-destructuring": ["error", {
-      "object": true,
-      "array": false
-    }],
-    "no-use-before-define": ["error", {
-      "functions": false
-    }]
+    "no-underscore-dangle": "off"
   }
 }

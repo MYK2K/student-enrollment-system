@@ -107,6 +107,18 @@ export const enrollInCourses = async (userId, courseIds) => {
     throw new AppError(`Course(s) not found: ${notFoundIds.join(', ')}`, HTTP_STATUS.NOT_FOUND);
   }
 
+  // Check if time table exists
+  const checkTimetables = await prisma.timetable.groupBy({
+    by: 'courseId',
+    where: { courseId: { in: courseIds } },
+  });
+
+  if (checkTimetables.length !== courseIds.length) {
+    const foundIds = new Set(checkTimetables.map(t => t.courseId));
+    const notFoundIds = courseIds.filter(id => !foundIds.has(id));
+    throw new AppError(`Course(s) do not have any timetable: ${notFoundIds.join(', ')}`, HTTP_STATUS.NOT_FOUND);
+  }
+
   const mismatchedCourse = requestedCourses.find(course => course.collegeId !== student.collegeId);
   if (mismatchedCourse) {
     throw new AppError(ERROR_MESSAGES.COLLEGE_MISMATCH, HTTP_STATUS.BAD_REQUEST);

@@ -40,49 +40,49 @@ export const isStudent = authorize(USER_ROLES.STUDENT);
  */
 export const isCollegeAdmin = authorize(USER_ROLES.COLLEGE_ADMIN);
 
-/**
- * Middleware to ensure user is either student or college admin
- */
-export const isStudentOrAdmin = authorize(USER_ROLES.STUDENT, USER_ROLES.COLLEGE_ADMIN);
+// /**
+//  * Middleware to ensure user is either student or college admin
+//  */
+// export const isStudentOrAdmin = authorize(USER_ROLES.STUDENT, USER_ROLES.COLLEGE_ADMIN);
 
-/**
- * Check if user owns the resource (for students)
- * @param {string} paramName - Request parameter name containing student ID
- * @returns {Function} Middleware function
- */
-export const isResourceOwner = (paramName = 'studentId') => {
-  return async (req, res, next) => {
-    try {
-      // Only apply to students
-      if (req.user.role !== USER_ROLES.STUDENT) {
-        return next();
-      }
+// /**
+//  * Check if user owns the resource (for students)
+//  * @param {string} paramName - Request parameter name containing student ID
+//  * @returns {Function} Middleware function
+//  */
+// export const isResourceOwner = (paramName = 'studentId') => {
+//   return async (req, res, next) => {
+//     try {
+//       // Only apply to students
+//       if (req.user.role !== USER_ROLES.STUDENT) {
+//         return next();
+//       }
 
-      const resourceId = parseInt(req.params[paramName]) || parseInt(req.body[paramName]);
+//       const resourceId = parseInt(req.params[paramName]) || parseInt(req.body[paramName]);
       
-      if (!resourceId) {
-        return sendForbidden(res, 'Resource ID not provided');
-      }
+//       if (!resourceId) {
+//         return sendForbidden(res, 'Resource ID not provided');
+//       }
 
-      // Get student record for the authenticated user
-      const student = await prisma.student.findUnique({
-        where: { userId: req.user.id }
-      });
+//       // Get student record for the authenticated user
+//       const student = await prisma.student.findUnique({
+//         where: { userId: req.user.id }
+//       });
 
-      if (!student || student.id !== resourceId) {
-        logger.warn(`Student ${req.user.email} attempted to access resource belonging to student ID ${resourceId}`);
-        return sendForbidden(res, 'Access denied: You can only access your own resources');
-      }
+//       if (!student || student.id !== resourceId) {
+//         logger.warn(`Student ${req.user.email} attempted to access resource belonging to student ID ${resourceId}`);
+//         return sendForbidden(res, 'Access denied: You can only access your own resources');
+//       }
 
-      // Attach student to request for convenience
-      req.student = student;
-      next();
-    } catch (error) {
-      logger.error('Resource owner check error:', error);
-      return sendForbidden(res, 'Access denied');
-    }
-  };
-};
+//       // Attach student to request for convenience
+//       req.student = student;
+//       next();
+//     } catch (error) {
+//       logger.error('Resource owner check error:', error);
+//       return sendForbidden(res, 'Access denied');
+//     }
+//   };
+// };
 
 /**
  * Check if admin belongs to the same college as the resource

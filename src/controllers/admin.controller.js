@@ -4,33 +4,75 @@
  */
 
 import * as adminService from '../services/admin.service.js';
-import { 
-  sendResponse, 
+import {
+  sendResponse,
+  sendCreated,
+  sendNoContent,
+  sendNotFound,
+  sendBadRequest,
   sendConflict,
-  sendServerError 
+  sendServerError
 } from '../utils/response.utils.js';
 import { logger } from '../utils/logger.js';
-import { SUCCESS_MESSAGES, ERROR_MESSAGES } from '../config/constants.js';
+import { ERROR_MESSAGES } from '../config/constants.js';
 
 /**
- * Manage timetable
+ * Create timetable slots for a course
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-export const manageTimetable = async (req, res) => {
+export const createTimetable = async (req, res) => {
   try {
-    const { courseId, timetable } = req.body;
-    
-    const result = await adminService.manageTimetable(courseId, timetable);
-    
-    sendResponse(res, 200, SUCCESS_MESSAGES.UPDATE_SUCCESS, result);
+    const courseId = parseInt(req.params.courseId);
+    const timetableSlots = req.body;
+
+    const result = await adminService.createTimetableSlots(courseId, timetableSlots);
+
+    sendCreated(res, 'Timetable slots created successfully', result);
   } catch (error) {
-    logger.error('Manage timetable error:', error);
-    
-    if (error.message.includes('conflict')) {
-      return sendConflict(res, ERROR_MESSAGES.TIMETABLE_UPDATE_CONFLICT);
+    logger.error('Create timetable error:', error);
+
+    if (error.message === ERROR_MESSAGES.COURSE_NOT_FOUND) {
+      return sendNotFound(res, error.message);
     }
-    
+
+    if (error.message.includes('overlap') || error.message.includes('conflict')) {
+      return sendConflict(res, error.message, error.details || null);
+    }
+
+    sendServerError(res, error.message);
+  }
+};
+
+/**
+ * Update a specific timetable slot
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+export const updateTimetableSlot = async (req, res) => {
+  try {
+    const adminId = req.user.id;
+    const timetableId = parseInt(req.params.timetableId);
+    const updateData = req.body;
+
+    const result = await adminService.updateTimetableSlot(adminId, timetableId, updateData);
+
+    sendResponse(res, 200, 'Timetable slot updated successfully', result);
+  } catch (error) {
+    logger.error('Update timetable slot error:', error);
+
+    if (error.message === ERROR_MESSAGES.TIMETABLE_SLOT_NOT_FOUND) {
+      return sendNotFound(res, error.message);
+    }
+
+    if (error.message === ERROR_MESSAGES.COLLEGE_ACCESS_DENIED) {
+      return sendBadRequest(res, error.message);
+    }
+
+    if (error.message.includes('overlap') || error.message.includes('conflict')) {
+      return sendConflict(res, error.message, error.details || null);
+    }
+
     sendServerError(res, error.message);
   }
 };
@@ -43,13 +85,22 @@ export const manageTimetable = async (req, res) => {
 export const deleteTimetableSlot = async (req, res) => {
   try {
     const adminId = req.user.id;
-    const { timetableId } = req.params;
-    
-    await adminService.deleteTimetableSlot(adminId, parseInt(timetableId));
-    
-    sendResponse(res, 200, SUCCESS_MESSAGES.DELETE_SUCCESS);
+    const timetableId = parseInt(req.params.timetableId);
+
+    await adminService.deleteTimetableSlot(adminId, timetableId);
+
+    sendNoContent(res);
   } catch (error) {
     logger.error('Delete timetable slot error:', error);
+
+    if (error.message === ERROR_MESSAGES.TIMETABLE_SLOT_NOT_FOUND) {
+      return sendNotFound(res, error.message);
+    }
+
+    if (error.message === ERROR_MESSAGES.COLLEGE_ACCESS_DENIED) {
+      return sendBadRequest(res, error.message);
+    }
+
     sendServerError(res, error.message);
   }
 };

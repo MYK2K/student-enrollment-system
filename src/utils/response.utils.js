@@ -60,29 +60,29 @@ export const sendError = (res, statusCode = HTTP_STATUS.INTERNAL_SERVER_ERROR, m
   return res.status(statusCode).json(response);
 };
 
-/**
- * Send paginated response
- * @param {Object} res - Express response object
- * @param {Array} data - Array of data items
- * @param {Object} pagination - Pagination details
- * @param {string} message - Success message
- */
-export const sendPaginatedResponse = (res, data, pagination, message = 'Data fetched successfully') => {
-  const { page, limit, total, totalPages } = pagination;
+// /**
+//  * Send paginated response
+//  * @param {Object} res - Express response object
+//  * @param {Array} data - Array of data items
+//  * @param {Object} pagination - Pagination details
+//  * @param {string} message - Success message
+//  */
+// export const sendPaginatedResponse = (res, data, pagination, message = 'Data fetched successfully') => {
+//   const { page, limit, total, totalPages } = pagination;
 
-  const meta = {
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages,
-      hasNextPage: page < totalPages,
-      hasPrevPage: page > 1,
-    }
-  };
+//   const meta = {
+//     pagination: {
+//       page,
+//       limit,
+//       total,
+//       totalPages,
+//       hasNextPage: page < totalPages,
+//       hasPrevPage: page > 1,
+//     }
+//   };
 
-  return sendResponse(res, HTTP_STATUS.OK, message, data, meta);
-};
+//   return sendResponse(res, HTTP_STATUS.OK, message, data, meta);
+// };
 
 /**
  * Send created response (201)

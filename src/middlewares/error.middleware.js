@@ -3,9 +3,9 @@
  * Global error handler for the application
  */
 
+import { Prisma } from '@prisma/client';
 import { sendServerError, sendValidationError, sendBadRequest } from '../utils/response.utils.js';
 import { logger } from '../utils/logger.js';
-import { Prisma } from '@prisma/client';
 import { ERROR_MESSAGES, HTTP_STATUS } from '../config/constants.js';
 
 /**
@@ -17,7 +17,7 @@ export class AppError extends Error {
     this.statusCode = statusCode;
     this.errors = errors;
     this.isOperational = true;
-    
+
     Error.captureStackTrace(this, this.constructor);
   }
 }
@@ -32,6 +32,55 @@ export const asyncHandler = (fn) => {
   return (req, res, next) => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };
+};
+
+/**
+ * Handle Prisma specific errors
+ * @param {Error} err - Prisma error
+ * @param {Object} res - Express response object
+ */
+const handlePrismaError = (err, res) => {
+  switch (err.code) {
+  case 'P2002':
+    // Unique constraint violation
+    const field = err.meta?.target?.[0] || 'field';
+    return res.status(HTTP_STATUS.CONFLICT).json({
+      success: false,
+      message: ERROR_MESSAGES.DUPLICATE_ENTRY,
+      errors: [{
+        field,
+        message: 'Must be unique'
+      }]
+    });
+
+  case 'P2003':
+    // Foreign key constraint violation
+    return res.status(HTTP_STATUS.BAD_REQUEST).json({
+      success: false,
+      message: ERROR_MESSAGES.INVALID_REFERENCE
+    });
+
+  case 'P2025':
+    // Record not found
+    return res.status(HTTP_STATUS.NOT_FOUND).json({
+      success: false,
+      message: ERROR_MESSAGES.RECORD_NOT_FOUND
+    });
+
+  case 'P2016':
+    // Query interpretation error
+    return res.status(HTTP_STATUS.BAD_REQUEST).json({
+      success: false,
+      message: ERROR_MESSAGES.QUERY_ERROR
+    });
+
+  default:
+    // Generic database error
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: ERROR_MESSAGES.DATABASE_ERROR
+    });
+  }
 };
 
 /**
@@ -107,55 +156,6 @@ export const errorHandler = (err, req, res, next) => {
   const stack = isDevelopment ? err.stack : undefined;
 
   sendServerError(res, message, stack);
-};
-
-/**
- * Handle Prisma specific errors
- * @param {Error} err - Prisma error
- * @param {Object} res - Express response object
- */
-const handlePrismaError = (err, res) => {
-  switch (err.code) {
-    case 'P2002':
-      // Unique constraint violation
-      const field = err.meta?.target?.[0] || 'field';
-      return res.status(HTTP_STATUS.CONFLICT).json({
-        success: false,
-        message: ERROR_MESSAGES.DUPLICATE_ENTRY,
-        errors: [{
-          field,
-          message: 'Must be unique'
-        }]
-      });
-
-    case 'P2003':
-      // Foreign key constraint violation
-      return res.status(HTTP_STATUS.BAD_REQUEST).json({
-        success: false,
-        message: ERROR_MESSAGES.INVALID_REFERENCE
-      });
-
-    case 'P2025':
-      // Record not found
-      return res.status(HTTP_STATUS.NOT_FOUND).json({
-        success: false,
-        message: ERROR_MESSAGES.RECORD_NOT_FOUND
-      });
-
-    case 'P2016':
-      // Query interpretation error
-      return res.status(HTTP_STATUS.BAD_REQUEST).json({
-        success: false,
-        message: ERROR_MESSAGES.QUERY_ERROR
-      });
-
-    default:
-      // Generic database error
-      return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        message: ERROR_MESSAGES.DATABASE_ERROR
-      });
-  }
 };
 
 /**

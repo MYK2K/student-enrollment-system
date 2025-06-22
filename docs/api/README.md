@@ -2,121 +2,107 @@
 
 ## Overview
 
-The Student Course Enrollment System API is a RESTful web service that enables educational institutions to manage student course enrollments with automatic timetable clash detection. This API supports role-based access control with separate functionalities for students and college administrators.
+Welcome to the API for the Student Course Enrollment System. This RESTful service provides the backend logic for managing student course enrollments, with a core focus on preventing timetable conflicts. It supports distinct roles for students and college administrators.
+
+This document details the essential endpoints required to interact with the system.
 
 ## Base URL
 
+All API endpoints are prefixed with the following base URL:
+
 ```
-Development: http://localhost:3000/api
-Production: https://api.studentenrollment.com/api
+http://localhost:3000/api
 ```
 
 ## Authentication
 
-The API uses JWT (JSON Web Token) based authentication. Include the access token in the Authorization header:
+The API uses JWT (JSON Web Tokens) for authentication. To access protected endpoints, you must first log in to receive an access token. Include this token in the `Authorization` header for all subsequent requests.
 
+**Format**:
 ```
-Authorization: Bearer <access_token>
+Authorization: Bearer <your_access_token>
 ```
 
 ## User Roles
 
-1. **Student**: Can view courses, enroll/drop courses, and manage their profile
-2. **College Admin**: Can manage courses, timetables, and students for their college
+The system has two primary user roles:
+1.  **STUDENT**: Can enroll in courses from their college and view their schedule.
+2.  **COLLEGE_ADMIN**: Can manage course timetables for their college.
+
+---
 
 ## API Endpoints
 
-### Authentication
+### 1. Authentication
 
-#### Register User
+#### Register a New User
 - **POST** `/auth/register`
 - **Access**: Public
-- **Description**: Register a new student or admin user
+- **Description**: Creates a new user account, which can be either a student or a college admin.
 
 **Request Body:**
 ```json
 {
-  "email": "user@example.com",
-  "password": "SecurePass@123",
-  "confirmPassword": "SecurePass@123",
+  "email": "jane.doe@student.edu",
+  "password": "SecurePassword@123",
+  "confirmPassword": "SecurePassword@123",
   "role": "student",
-  "name": "John Doe",
+  "name": "Jane Doe",
   "collegeId": 1,
-  "studentNumber": "STU001" // Required for students
+  "studentNumber": "TECH2024002"
 }
 ```
 
-#### Login
+#### Login a User
 - **POST** `/auth/login`
 - **Access**: Public
-- **Description**: Authenticate user and receive tokens
+- **Description**: Authenticates a user and returns an access token and refresh token.
 
 **Request Body:**
 ```json
 {
-  "email": "user@example.com",
-  "password": "SecurePass@123"
+  "email": "jane.doe@student.edu",
+  "password": "SecurePassword@123"
 }
 ```
 
-**Response:**
+**Success Response (200 OK):**
 ```json
 {
   "success": true,
   "message": "Login successful",
   "data": {
     "user": {
-      "id": 1,
-      "email": "user@example.com",
-      "role": "student"
+      "id": 2,
+      "email": "jane.doe@student.edu",
+      "role": "STUDENT"
     },
-    "accessToken": "eyJhbGciOiJIUzI1NiIs...",
-    "refreshToken": "eyJhbGciOiJIUzI1NiIs...",
-    "tokenType": "Bearer",
-    "expiresIn": "7d"
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5c...",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5c..."
   }
 }
 ```
 
-### Student Endpoints
+---
 
-#### Get Profile
-- **GET** `/students/profile`
-- **Access**: Student only
-- **Description**: Get current student's profile information
+### 2. Student Enrollment
 
-#### Get Enrolled Courses
-- **GET** `/students/courses`
-- **Access**: Student only
-- **Query Parameters**: `page`, `limit`
-- **Description**: Get paginated list of enrolled courses
-
-#### Get Available Courses
-- **GET** `/students/available-courses`
-- **Access**: Student only
-- **Query Parameters**: `page`, `limit`, `search`
-- **Description**: Get courses available for enrollment from student's college
-
-#### Get Timetable
-- **GET** `/students/timetable`
-- **Access**: Student only
-- **Description**: Get weekly timetable with all enrolled courses
-
-### Enrollment Endpoints
+This is the core function required by the assignment.
 
 #### Enroll in Courses
 - **POST** `/enrollments`
-- **Access**: Student only
-- **Description**: Enroll in multiple courses with automatic clash detection
+- **Access**: `STUDENT` role required
+- **Description**: Enrolls the authenticated student in one or more courses. This is an **atomic operation**: if any validation fails (e.g., timetable clash, invalid course, college mismatch), the entire enrollment process is aborted, and no changes are saved.
 
 **Request Body:**
 ```json
 {
-  "courseIds": [1, 2, 3]
+  "courseIds": [1, 2]
 }
 ```
 
-**Response (Success):**
+**Success Response (201 Created):**
+Indicates that the student was successfully enrolled in the new courses.
 ```json
 {
   "success": true,
@@ -127,225 +113,124 @@ Authorization: Bearer <access_token>
         "courseId": 1,
         "courseCode": "CS101",
         "courseName": "Introduction to Programming"
-      }
-    ],
-    "failed": []
-  }
-}
-```
-
-**Response (With Conflicts):**
-```json
-{
-  "success": false,
-  "message": "Timetable clash detected",
-  "errors": {
-    "conflicts": [
+      },
       {
-        "message": "CS102 conflicts with CS101 on Monday from 09:00-10:00 overlaps with 09:30-10:30"
+        "courseId": 2,
+        "courseCode": "CS102",
+        "courseName": "Data Structures"
       }
     ]
   }
 }
 ```
 
-#### Check Timetable Conflicts
-- **POST** `/enrollments/check-conflicts`
-- **Access**: Student only
-- **Description**: Check for conflicts before enrollment
-
-#### Drop Enrollment
-- **DELETE** `/enrollments/:enrollmentId`
-- **Access**: Student only
-- **Description**: Drop a course enrollment
-
-### Course Endpoints
-
-#### Get All Courses
-- **GET** `/courses`
-- **Access**: Public
-- **Query Parameters**: `page`, `limit`, `search`, `collegeId`
-- **Description**: Get paginated list of courses
-
-#### Get Course Details
-- **GET** `/courses/:courseId`
-- **Access**: Public
-- **Description**: Get detailed information about a course
-
-#### Get Course Timetable
-- **GET** `/courses/:courseId/timetable`
-- **Access**: Public
-- **Description**: Get timetable for a specific course
-
-### Admin Endpoints
-
-#### Dashboard Statistics
-- **GET** `/admin/dashboard`
-- **Access**: College Admin only
-- **Description**: Get dashboard statistics for the admin's college
-
-#### Create Course
-- **POST** `/admin/courses`
-- **Access**: College Admin only
-- **Description**: Create a new course
-
-**Request Body:**
-```json
-{
-  "code": "CS301",
-  "name": "Database Systems",
-  "description": "Introduction to database design"
-}
-```
-
-#### Update Course
-- **PUT** `/admin/courses/:courseId`
-- **Access**: College Admin only
-- **Description**: Update course details
-
-#### Delete Course
-- **DELETE** `/admin/courses/:courseId`
-- **Access**: College Admin only
-- **Description**: Delete a course (only if no students enrolled)
-
-#### Manage Timetable
-- **POST** `/admin/timetables`
-- **Access**: College Admin only
-- **Description**: Create or update course timetable
-
-**Request Body:**
-```json
-{
-  "courseId": 1,
-  "timetable": [
-    {
-      "dayOfWeek": 1,
-      "startTime": "09:00",
-      "endTime": "10:30"
-    },
-    {
-      "dayOfWeek": 3,
-      "startTime": "09:00",
-      "endTime": "10:30"
-    }
-  ]
-}
-```
-
-#### Get Students
-- **GET** `/admin/students`
-- **Access**: College Admin only
-- **Query Parameters**: `page`, `limit`, `search`
-- **Description**: Get list of students in admin's college
-
-#### Bulk Import Students
-- **POST** `/admin/students/bulk-import`
-- **Access**: College Admin only
-- **Description**: Import multiple students at once
-
-**Request Body:**
-```json
-{
-  "students": [
-    {
-      "email": "student1@college.edu",
-      "name": "Student One",
-      "studentNumber": "STU001"
-    }
-  ],
-  "defaultPassword": "TempPass@123"
-}
-```
-
-## Error Responses
-
-All error responses follow this format:
-
+**Error Response (409 Conflict - Timetable Clash):**
+Returns a list of specific, detailed conflicts that prevented the enrollment.
 ```json
 {
   "success": false,
-  "message": "Error description",
+  "message": "Cannot enroll: timetable clash detected",
+  "errors": {
+    "conflicts": [
+      {
+        "type": "EXTERNAL",
+        "message": "Requested course CS103 (Mon 09:30-10:30) clashes with already enrolled course CS101 (Mon 09:00-10:00)."
+      }
+    ]
+  }
+}
+```
+---
+
+### 3. Admin - Timetable Management (Bonus)
+
+These endpoints fulfill the bonus requirement for admin functionality.
+
+#### Add Timetable Slots to a Course
+- **POST** `/admin/courses/:courseId/timetable`
+- **Access**: `COLLEGE_ADMIN` role required
+- **Description**: Adds one or more new time slots to a course. The system will prevent adding a slot if it conflicts with the course's existing schedule or clashes with the schedules of any students already enrolled in that course.
+
+**Request Body:**
+```json
+[
+  {
+    "dayOfWeek": 5,
+    "startTime": "14:00",
+    "endTime": "15:30"
+  }
+]
+```
+
+#### Update a Timetable Slot
+- **PATCH** `/admin/timetables/:timetableId`
+- **Access**: `COLLEGE_ADMIN` role required
+- **Description**: Modifies an existing timetable slot.
+
+**Request Body:**
+```json
+{
+  "startTime": "14:15",
+  "endTime": "15:45"
+}
+```
+
+#### Delete a Timetable Slot
+- **DELETE** `/admin/timetables/:timetableId`
+- **Access**: `COLLEGE_ADMIN` role required
+- **Description**: Removes a timetable slot from a course.
+
+---
+
+## Error Responses
+
+Failed API requests will return a standardized JSON error object.
+
+**Standard Format:**
+```json
+{
+  "success": false,
+  "message": "A brief description of the error.",
   "errors": [
     {
-      "field": "email",
-      "message": "Invalid email format"
+      "field": "fieldName",
+      "message": "Detailed error message."
     }
   ],
   "timestamp": "2024-01-01T00:00:00.000Z"
 }
 ```
 
-### Common HTTP Status Codes
+**Common HTTP Status Codes:**
+- `200 OK`: Request was successful.
+- `201 Created`: Resource was successfully created.
+- `204 No Content`: Request was successful, but there is no content to return (e.g., after a delete operation).
+- `400 Bad Request`: The request was malformed (e.g., student and course from different colleges).
+- `401 Unauthorized`: Authentication failed or token was not provided.
+- `403 Forbidden`: The authenticated user does not have permission to access the resource.
+- `404 Not Found`: The requested resource does not exist.
+- `409 Conflict`: The request could not be completed due to a conflict (e.g., timetable clash).
+- `422 Unprocessable Entity`: The request was well-formed but contained validation errors.
+- `500 Internal Server Error`: An unexpected error occurred on the server.
 
-- `200` - Success
-- `201` - Created
-- `400` - Bad Request
-- `401` - Unauthorized
-- `403` - Forbidden
-- `404` - Not Found
-- `409` - Conflict (e.g., timetable clash)
-- `422` - Validation Error
-- `500` - Internal Server Error
+## Testing with cURL
 
-## Rate Limiting
+1.  **Login and get a token:**
+    ```bash
+    # Replace with your student's credentials
+    curl -X POST http://localhost:3000/api/auth/login \
+      -H "Content-Type: application/json" \
+      -d '{"email":"john.doe@student.edu","password":"Student@123"}'
+    ```
+    Copy the `accessToken` from the response.
 
-API requests are limited to 100 requests per 15-minute window per IP address.
+2.  **Enroll in courses using the token:**
+    ```bash
+    # Replace <your_access_token> with the token from the login step
+    export TOKEN="<your_access_token>"
 
-## Pagination
-
-Paginated endpoints support these query parameters:
-- `page` (default: 1)
-- `limit` (default: 20, max: 100)
-
-Response includes pagination metadata:
-```json
-{
-  "meta": {
-    "pagination": {
-      "page": 1,
-      "limit": 20,
-      "total": 45,
-      "totalPages": 3,
-      "hasNextPage": true,
-      "hasPrevPage": false
-    }
-  }
-}
-```
-
-## Testing
-
-### Using Postman
-
-1. Import the Postman collection from `docs/postman/collection.json`
-2. Set up environment variables:
-   - `baseUrl`: API base URL
-   - `accessToken`: Will be set automatically after login
-3. Run the "Login" request first to authenticate
-
-### Using cURL
-
-```bash
-# Login
-curl -X POST http://localhost:3000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"student@test.edu","password":"Student@123"}'
-
-# Get courses (with auth)
-curl -X GET http://localhost:3000/api/students/courses \
-  -H "Authorization: Bearer <access_token>"
-```
-
-## Best Practices
-
-1. **Authentication**: Always include the access token for protected endpoints
-2. **Error Handling**: Check the `success` field in responses
-3. **Pagination**: Use pagination for list endpoints to improve performance
-4. **Validation**: Validate input on client-side to reduce server errors
-5. **Timetable Conflicts**: Use the conflict check endpoint before enrollment
-
-## Support
-
-For API support or bug reports, please contact:
-- Email: support@studentenrollment.com
-- Documentation: https://docs.studentenrollment.com
+    curl -X POST http://localhost:3000/api/enrollments \
+      -H "Content-Type: application/json" \
+      -H "Authorization: Bearer $TOKEN" \
+      -d '{"courseIds": [1, 2]}'
+    ```

@@ -18,23 +18,23 @@ export const authenticate = async (req, res, next) => {
   try {
     // Extract token from Authorization header
     const token = extractTokenFromHeader(req.headers.authorization);
-    
+
     if (!token) {
       return sendUnauthorized(res, 'No token provided');
     }
 
     // Verify token
     const decoded = verifyAccessToken(token);
-    
+
     if (!decoded) {
       return sendUnauthorized(res, 'Invalid or expired token');
     }
 
     // Get user from database
     const user = await prisma.user.findUnique({
-      where: { 
+      where: {
         id: decoded.id,
-        isActive: true 
+        isActive: true
       },
       select: {
         id: true,
@@ -50,55 +50,14 @@ export const authenticate = async (req, res, next) => {
 
     // Attach user to request object
     req.user = user;
-    
+
     // Log successful authentication
     logger.debug(`User ${user.email} authenticated successfully`);
-    
+
     next();
   } catch (error) {
     logger.error('Authentication error:', error);
     return sendUnauthorized(res, 'Authentication failed');
-  }
-};
-
-/**
- * Optional authentication - doesn't fail if no token
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Express next function
- */
-export const optionalAuth = async (req, res, next) => {
-  try {
-    const token = extractTokenFromHeader(req.headers.authorization);
-    
-    if (token) {
-      const decoded = verifyAccessToken(token);
-      
-      if (decoded) {
-        const user = await prisma.user.findUnique({
-          where: { 
-            id: decoded.id,
-            isActive: true 
-          },
-          select: {
-            id: true,
-            email: true,
-            role: true,
-            isActive: true
-          }
-        });
-
-        if (user) {
-          req.user = user;
-        }
-      }
-    }
-    
-    next();
-  } catch (error) {
-    // Silent fail - continue without user
-    logger.debug('Optional auth failed:', error.message);
-    next();
   }
 };
 
@@ -111,23 +70,23 @@ export const optionalAuth = async (req, res, next) => {
 export const authenticateRefreshToken = async (req, res, next) => {
   try {
     const { refreshToken } = req.body;
-    
+
     if (!refreshToken) {
       return sendUnauthorized(res, 'No refresh token provided');
     }
 
     // Verify refresh token
     const decoded = verifyRefreshToken(refreshToken);
-    
+
     if (!decoded) {
       return sendUnauthorized(res, 'Invalid or expired refresh token');
     }
 
     // Get user from database
     const user = await prisma.user.findUnique({
-      where: { 
+      where: {
         id: decoded.id,
-        isActive: true 
+        isActive: true
       },
       select: {
         id: true,
@@ -143,7 +102,7 @@ export const authenticateRefreshToken = async (req, res, next) => {
 
     // Attach user to request object
     req.user = user;
-    
+
     next();
   } catch (error) {
     logger.error('Refresh token authentication error:', error);

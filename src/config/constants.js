@@ -25,13 +25,6 @@ export const VALIDATION = {
   DESCRIPTION_MAX_LENGTH: 1000,
 };
 
-// Pagination
-export const PAGINATION = {
-  DEFAULT_PAGE: 1,
-  DEFAULT_LIMIT: parseInt(process.env.DEFAULT_PAGE_SIZE) || 20,
-  MAX_LIMIT: parseInt(process.env.MAX_PAGE_SIZE) || 100,
-};
-
 // HTTP Status Codes
 export const HTTP_STATUS = {
   OK: 200,
@@ -106,11 +99,6 @@ export const ERROR_MESSAGES = {
   COLLEGE_MISMATCH: 'Student and courses must belong to the same college',
   COLLEGE_ACCESS_DENIED: 'You can only manage resources from your own college',
   
-  // Course
-  COURSE_NOT_FOUND: 'Course not found',
-  COURSE_CODE_EXISTS: 'Course with this code already exists in the college',
-  COURSE_DELETE_HAS_ENROLLMENTS: 'Cannot delete course with enrolled students',
-  
   // Enrollment & Arrays
   ALREADY_ENROLLED: 'Student is already enrolled in this course',
   TIMETABLE_CLASH: 'Cannot enroll: timetable clash detected',
@@ -168,18 +156,4 @@ export const JWT_CONFIG = {
   ALGORITHM: 'HS256',
   ISSUER: 'student-enrollment-system',
   AUDIENCE: 'student-enrollment-api',
-};
-
-// Cache TTL (in seconds)
-export const CACHE_TTL = {
-  USER_SESSION: 3600, // 1 hour
-  COURSE_LIST: 300, // 5 minutes
-  COLLEGE_INFO: 1800, // 30 minutes
-};
-
-// Regex Patterns
-export const REGEX_PATTERNS = {
-  EMAIL: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-  ALPHANUMERIC: /^[a-zA-Z0-9]+$/,
-  COURSE_CODE: /^[A-Z]{2,4}[0-9]{3,4}$/,
 };
